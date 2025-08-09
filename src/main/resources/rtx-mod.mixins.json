@@ -1,0 +1,17 @@
+{
+    "required": true,
+    "minVersion": "0.8",
+    "package": "com.rtxmod.mixin",
+    "compatibilityLevel": "JAVA_17",
+    "refmap": "rtx-mod.refmap.json",
+    "mixins": [
+    ],
+    "client": [
+        "GameRendererMixin",
+        "WorldRendererMixin",
+        "RenderSystemMixin"
+    ],
+    "injectors": {
+        "defaultRequire": 1
+    }
+}

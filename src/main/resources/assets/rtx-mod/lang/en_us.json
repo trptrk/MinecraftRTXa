@@ -1,0 +1,42 @@
+{
+  "key.rtx-mod.toggle_rtx": "Toggle RTX",
+  "key.rtx-mod.reload_shaders": "Reload RTX Shaders",
+  "category.rtx-mod.rtx": "RTX Controls",
+  
+  "rtx-mod.config.title": "RTX Settings",
+  "rtx-mod.config.ray_tracing.title": "Ray Tracing",
+  "rtx-mod.config.ray_tracing.enable": "Enable Ray Tracing",
+  "rtx-mod.config.ray_tracing.max_bounces": "Max Ray Bounces",
+  "rtx-mod.config.ray_tracing.samples_per_pixel": "Samples Per Pixel",
+  "rtx-mod.config.ray_tracing.distance": "Ray Tracing Distance",
+  
+  "rtx-mod.config.global_illumination.title": "Global Illumination",
+  "rtx-mod.config.global_illumination.enable": "Enable Global Illumination",
+  "rtx-mod.config.global_illumination.strength": "GI Strength",
+  "rtx-mod.config.global_illumination.samples": "GI Samples",
+  
+  "rtx-mod.config.reflections.title": "Reflections",
+  "rtx-mod.config.reflections.enable": "Enable Reflections",
+  "rtx-mod.config.reflections.strength": "Reflection Strength",
+  "rtx-mod.config.reflections.quality": "Reflection Quality",
+  
+  "rtx-mod.config.shadows.title": "Shadows",
+  "rtx-mod.config.shadows.enable": "Enable Ray Traced Shadows",
+  "rtx-mod.config.shadows.strength": "Shadow Strength",
+  "rtx-mod.config.shadows.samples": "Shadow Samples",
+  
+  "rtx-mod.config.performance.title": "Performance",
+  "rtx-mod.config.performance.render_scale": "Render Scale",
+  "rtx-mod.config.performance.temporal_upsampling": "Temporal Upsampling",
+  "rtx-mod.config.performance.denoising": "Denoising",
+  
+  "rtx-mod.config.debug.title": "Debug",
+  "rtx-mod.config.debug.show_info": "Show Debug Info",
+  "rtx-mod.config.debug.wireframe": "Wireframe Mode",
+  "rtx-mod.config.debug.bounding_boxes": "Show Bounding Boxes",
+  
+  "rtx-mod.hud.fps": "RTX FPS: %s",
+  "rtx-mod.hud.rt_mode": "RTX: %s",
+  "rtx-mod.hud.samples": "Samples: %s",
+  "rtx-mod.hud.bounces": "Bounces: %s"
+}

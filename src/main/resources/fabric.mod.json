@@ -1,0 +1,55 @@
+{
+    "schemaVersion": 1,
+    "id": "rtx-mod",
+    "version": "${version}",
+
+    "name": "RTX Mod",
+    "description": "Advanced ray tracing and rendering enhancements for Minecraft",
+    "authors": [
+        "RTX Team"
+    ],
+    "contact": {
+        "homepage": "https://github.com/rtx-mod/rtx-mod",
+        "sources": "https://github.com/rtx-mod/rtx-mod"
+    },
+
+    "license": "MIT",
+    "icon": "assets/rtx-mod/icon.png",
+
+    "environment": "client",
+
+    "entrypoints": {
+        "client": [
+            "com.rtxmod.RTXModClient"
+        ],
+        "main": [
+            "com.rtxmod.RTXMod"
+        ]
+    },
+
+    "mixins": [
+        "rtx-mod.mixins.json"
+    ],
+
+    "depends": {
+        "fabricloader": ">=${loader_version}",
+        "fabric-api": "*",
+        "minecraft": "${minecraft_version}",
+        "java": ">=17"
+    },
+    "suggests": {
+        "another-mod": "*"
+    },
+
+    "custom": {
+        "modmenu": {
+            "badges": ["client"],
+            "parent": {
+                "id": "rtx-mod",
+                "name": "RTX Mod",
+                "description": "Advanced ray tracing and rendering enhancements",
+                "badges": ["client"]
+            }
+        }
+    }
+}
