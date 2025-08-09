@@ -1,0 +1,61 @@
+version: 2
+updates:
+  # Enable version updates for Gradle
+  - package-ecosystem: "gradle"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "gradle"
+    commit-message:
+      prefix: "deps"
+      prefix-development: "deps-dev"
+      include: "scope"
+    reviewers:
+      - "@me"  # Replace with your GitHub username
+    assignees:
+      - "@me"  # Replace with your GitHub username
+    
+    # Group updates for common libraries
+    groups:
+      lwjgl:
+        patterns:
+          - "org.lwjgl:*"
+      fabric:
+        patterns:
+          - "net.fabricmc*"
+          - "net.fabricmc.fabric-api:*"
+      minecraft:
+        patterns:
+          - "com.mojang:minecraft"
+      testing:
+        patterns:
+          - "org.junit*"
+          - "org.mockito*"
+          - "org.assertj*"
+    
+    # Ignore specific updates
+    ignore:
+      # Ignore major version updates for stable dependencies
+      - dependency-name: "com.mojang:minecraft"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "net.fabricmc:yarn"
+        update-types: ["version-update:semver-major"]
+      
+  # Enable version updates for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "ci"
+      include: "scope"

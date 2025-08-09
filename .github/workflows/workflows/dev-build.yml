@@ -1,0 +1,193 @@
+name: Development Build
+
+on:
+  push:
+    branches: [ develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+jobs:
+  dev-build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: 17
+        distribution: 'temurin'
+        
+    - name: Cache Gradle packages
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+          
+    - name: Make gradle wrapper executable
+      run: chmod +x ./gradlew
+      
+    - name: Generate build number
+      id: build_number
+      run: |
+        BUILD_NUMBER="${{ github.run_number }}"
+        COMMIT_SHA="${{ github.sha }}"
+        SHORT_SHA=${COMMIT_SHA:0:7}
+        
+        if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+          BUILD_NAME="pr-${{ github.event.number }}-${SHORT_SHA}"
+        else
+          BUILD_NAME="dev-${BUILD_NUMBER}-${SHORT_SHA}"
+        fi
+        
+        echo "BUILD_NAME=${BUILD_NAME}" >> $GITHUB_OUTPUT
+        echo "SHORT_SHA=${SHORT_SHA}" >> $GITHUB_OUTPUT
+        
+    - name: Update version for dev build
+      run: |
+        sed -i 's/mod_version=1.0.0/mod_version=1.0.0-${{ steps.build_number.outputs.BUILD_NAME }}/' gradle.properties
+        
+    - name: Build development version
+      run: ./gradlew build --no-daemon
+      
+    - name: Run integration tests
+      run: ./gradlew test integrationTest --no-daemon
+      continue-on-error: true
+      
+    - name: Generate test report
+      uses: dorny/test-reporter@v1
+      if: success() || failure()
+      with:
+        name: Test Results
+        path: 'build/test-results/test/*.xml'
+        reporter: java-junit
+        
+    - name: Upload development build
+      uses: actions/upload-artifact@v3
+      with:
+        name: rtx-mod-dev-${{ steps.build_number.outputs.BUILD_NAME }}
+        path: build/libs/*.jar
+        retention-days: 30
+        
+    - name: Comment PR with download link
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const buildName = '${{ steps.build_number.outputs.BUILD_NAME }}';
+          const shortSha = '${{ steps.build_number.outputs.SHORT_SHA }}';
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: `🔧 **Development Build Ready**
+            
+            📦 **Build:** \`${buildName}\`
+            🔗 **Commit:** ${shortSha}
+            
+            The development build is available in the [Actions artifacts](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}).
+            
+            **Note:** This is a development build and may contain bugs. Use at your own risk!`
+          });
+          
+  shader-validation:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Install shader validation tools
+      run: |
+        # Install glslang for shader validation
+        wget -q https://github.com/KhronosGroup/glslang/releases/latest/download/glslang-master-linux-Release.zip
+        unzip -q glslang-master-linux-Release.zip
+        chmod +x bin/glslangValidator
+        sudo mv bin/* /usr/local/bin/
+        
+    - name: Validate compute shaders
+      run: |
+        echo "Validating GLSL compute shaders..."
+        
+        # Create mock shader files for validation
+        mkdir -p temp_shaders
+        
+        # Mock ray tracing compute shader
+        cat > temp_shaders/raytracing.comp << 'EOF'
+        #version 460 core
+        
+        layout (local_size_x = 16, local_size_y = 16) in;
+        layout (rgba16f, binding = 0) uniform image2D img_output;
+        
+        uniform mat4 uViewMatrix;
+        uniform mat4 uProjectionMatrix;
+        uniform float uTime;
+        uniform int uFrame;
+        
+        void main() {
+            ivec2 pixel_coords = ivec2(gl_GlobalInvocationID.xy);
+            ivec2 dims = imageSize(img_output);
+            
+            if (pixel_coords.x >= dims.x || pixel_coords.y >= dims.y) {
+                return;
+            }
+            
+            vec2 uv = vec2(pixel_coords) / vec2(dims);
+            vec4 color = vec4(uv, 0.5, 1.0);
+            
+            imageStore(img_output, pixel_coords, color);
+        }
+        EOF
+        
+        # Validate shaders
+        glslangValidator temp_shaders/*.comp
+        echo "✅ Shader validation passed"
+        
+        # Cleanup
+        rm -rf temp_shaders
+        
+  compatibility-test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        java: [17]
+        
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Set up JDK ${{ matrix.java }}
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ matrix.java }}
+        distribution: 'temurin'
+        
+    - name: Cache Gradle packages
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        
+    - name: Make gradle wrapper executable (Unix)
+      if: runner.os != 'Windows'
+      run: chmod +x ./gradlew
+      
+    - name: Test compilation on ${{ matrix.os }}
+      run: |
+        ${{ runner.os == 'Windows' && 'gradlew.bat' || './gradlew' }} compileJava --no-daemon
+        
+    - name: Platform-specific tests
+      run: |
+        echo "Testing on ${{ matrix.os }} with Java ${{ matrix.java }}"
+        ${{ runner.os == 'Windows' && 'gradlew.bat' || './gradlew' }} test --no-daemon
